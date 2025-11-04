@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Visualizer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.8;
+        }
+
+        .controls {
+            padding: 25px;
+            background: #ecf0f1;
+            border-bottom: 1px solid #bdc3c7;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        select,
+        button,
+        input {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select {
+            background: white;
+            border: 2px solid #3498db;
+            min-width: 180px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            width: 200px;
+        }
+
+        .visualization {
+            padding: 30px;
+            min-height: 400px;
+            display: flex;
+            align-items: end;
+            gap: 2px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            margin: 20px;
+        }
+
+        .bar {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            border-radius: 3px 3px 0 0;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .bar.compared {
+            background: linear-gradient(45deg, #e74c3c, #c0392b) !important;
+        }
+
+        .bar.swapped {
+            background: linear-gradient(45deg, #f39c12, #e67e22) !important;
+        }
+
+        .bar.sorted {
+            background: linear-gradient(45deg, #27ae60, #229954) !important;
+        }
+
+        .bar.pivot {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad) !important;
+        }
+
+        .bar.min_index {
+            background: linear-gradient(45deg, #e67e22, #d35400) !important;
+        }
+
+        .bar.current {
+            background: linear-gradient(45deg, #e74c3c, #c0392b) !important;
+        }
+
+        .bar.key {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad) !important;
+        }
+
+        .bar.shifting {
+            background: linear-gradient(45deg, #f39c12, #e67e22) !important;
+        }
+
+        .info-panel {
+            padding: 20px;
+            background: #34495e;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .complexity {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+
+        .complexity-item h4 {
+            color: #bdc3c7;
+            margin-bottom: 5px;
+        }
+
+        .complexity-item p {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .description {
+            background: #2c3e50;
+            padding: 15px;
+            margin: 0 20px 20px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            min-height: 50px;
+        }
+
+        .debug {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 20px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            select,
+            button {
+                width: 100%;
+            }
+
+            .complexity,
+            .stats {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .info-panel {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Sorting Algorithm Visualizer</h1>
+            <div class="subtitle">Watch algorithms in action • Understand how they work</div>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <select id="algorithmSelect">
+                    <option value="bubble">Bubble Sort</option>
+                    <option value="selection">Selection Sort</option>
+                    <option value="insertion">Insertion Sort</option>
+                    <option value="merge">Merge Sort</option>
+                    <option value="quick">Quick Sort</option>
+                </select>
+
+                <select id="sizeSelect">
+                    <option value="10">10 Elements</option>
+                    <option value="20" selected>20 Elements</option>
+                    <option value="30">30 Elements</option>
+                    <option value="50">50 Elements</option>
+                </select>
+
+                <button onclick="generateNewArray()">Generate New Array</button>
+                <button onclick="startSorting()" id="sortButton">Start Sorting</button>
+                <button onclick="resetVisualization()" id="resetButton">Reset</button>
+            </div>
+
+            <div class="control-group">
+                <div class="speed-control">
+                    <label>Speed:</label>
+                    <input type="range" id="speedSlider" min="1" max="200" value="50">
+                    <span id="speedValue">Medium</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="debug" id="debugInfo">
+            Ready to visualize sorting algorithms! Click "Generate New Array" to start.
+        </div>
+
+        <div class="description" id="algorithmDescription">
+            Select an algorithm and generate an array to begin visualization...
+        </div>
+
+        <div class="visualization" id="visualization">
+            <div style="color: white; text-align: center; width: 100%; padding-top: 150px;">
+                No array generated yet. Click "Generate New Array"
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="complexity" id="complexityInfo">
+                <div class="complexity-item">
+                    <h4>Time Complexity</h4>
+                    <p id="timeComplexity">O(n²)</p>
+                </div>
+                <div class="complexity-item">
+                    <h4>Space Complexity</h4>
+                    <p id="spaceComplexity">O(1)</p>
+                </div>
+                <div class="complexity-item">
+                    <h4>Stability</h4>
+                    <p id="stability">Stable</p>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <h4>Step</h4>
+                    <p id="stepCount">0</p>
+                </div>
+                <div class="stat-item">
+                    <h4>Total Steps</h4>
+                    <p id="totalSteps">0</p>
+                </div>
+                <div class="stat-item">
+                    <h4>Time</h4>
+                    <p id="executionTime">0.00s</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentArray = [];
+        let steps = [];
+        let currentStep = 0;
+        let isSorting = false;
+        let animationSpeed = 100;
+        let executionTime = 0;
+
+        // Algorithm information
+        const algorithmInfo = {
+            'bubble': {
+                time: 'O(n²)', space: 'O(1)', stability: 'Stable',
+                description: 'Repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.'
+            },
+            'selection': {
+                time: 'O(n²)', space: 'O(1)', stability: 'Unstable',
+                description: 'Repeatedly finds the minimum element from unsorted part and puts it at the beginning.'
+            },
+            'insertion': {
+                time: 'O(n²)', space: 'O(1)', stability: 'Stable',
+                description: 'Builds the final sorted array one item at a time, much like sorting playing cards in your hands.'
+            },
+            'merge': {
+                time: 'O(n log n)', space: 'O(n)', stability: 'Stable',
+                description: 'Divides the array into halves, sorts them, and then merges the sorted halves.'
+            },
+            'quick': {
+                time: 'O(n log n)', space: 'O(log n)', stability: 'Unstable',
+                description: 'Picks an element as pivot and partitions the array around the pivot.'
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            updateAlgorithmInfo();
+            generateNewArray();
+        });
+
+        // Event listeners
+        document.getElementById('algorithmSelect').addEventListener('change', updateAlgorithmInfo);
+        document.getElementById('speedSlider').addEventListener('input', function (e) {
+            const speed = parseInt(e.target.value);
+            animationSpeed = 201 - speed;
+            const speedText = speed < 50 ? 'Slow' : speed < 150 ? 'Medium' : 'Fast';
+            document.getElementById('speedValue').textContent = speedText;
+        });
+
+        function updateAlgorithmInfo() {
+            const algorithm = document.getElementById('algorithmSelect').value;
+            const info = algorithmInfo[algorithm];
+
+            document.getElementById('timeComplexity').textContent = info.time;
+            document.getElementById('spaceComplexity').textContent = info.space;
+            document.getElementById('stability').textContent = info.stability;
+            document.getElementById('algorithmDescription').textContent = info.description;
+        }
+
+        function debugLog(message) {
+            console.log(message);
+            document.getElementById('debugInfo').textContent = 'Debug: ' + message;
+        }
+
+        async function generateNewArray() {
+            if (isSorting) return;
+
+            const size = parseInt(document.getElementById('sizeSelect').value);
+            debugLog('Generating new array of size: ' + size);
+
+            try {
+                const response = await fetch('/generate_array', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ size: size })
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const data = await response.json();
+                currentArray = data.array;
+                steps = [];
+                currentStep = 0;
+                executionTime = 0;
+
+                debugLog('Array generated successfully');
+                renderArray(currentArray);
+                updateInfo();
+
+            } catch (error) {
+                debugLog('Error generating array: ' + error.message);
+            }
+        }
+
+        async function startSorting() {
+            if (isSorting || currentArray.length === 0) return;
+
+            const algorithm = document.getElementById('algorithmSelect').value;
+            isSorting = true;
+            document.getElementById('sortButton').disabled = true;
+            document.getElementById('resetButton').disabled = true;
+
+            debugLog('Starting ' + algorithm + ' sort...');
+
+            try {
+                const response = await fetch('/sort', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        array: currentArray,
+                        algorithm: algorithm
+                    })
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const data = await response.json();
+                steps = data.steps;
+                executionTime = data.execution_time;
+                currentStep = 0;
+
+                debugLog(`Received ${steps.length} sorting steps in ${executionTime.toFixed(2)}s`);
+                updateInfo();
+
+                // Animate sorting steps
+                for (let i = 0; i < steps.length; i++) {
+                    if (!isSorting) break;
+
+                    renderStep(steps[i]);
+                    currentStep = i + 1;
+                    updateInfo();
+
+                    await new Promise(resolve => setTimeout(resolve, animationSpeed));
+                }
+
+                debugLog('Sorting completed!');
+
+            } catch (error) {
+                debugLog('Error during sorting: ' + error.message);
+            }
+
+            isSorting = false;
+            document.getElementById('sortButton').disabled = false;
+            document.getElementById('resetButton').disabled = false;
+        }
+
+        function resetVisualization() {
+            isSorting = false;
+            steps = [];
+            currentStep = 0;
+            executionTime = 0;
+            renderArray(currentArray);
+            updateInfo();
+            document.getElementById('sortButton').disabled = false;
+            document.getElementById('resetButton').disabled = false;
+            debugLog('Visualization reset');
+        }
+
+        function renderArray(array, highlights = {}) {
+            const container = document.getElementById('visualization');
+
+            if (array.length === 0) {
+                container.innerHTML = '<div style="color: white; text-align: center; width: 100%; padding-top: 150px;">No array generated yet. Click "Generate New Array"</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            const maxValue = Math.max(...array);
+            const containerHeight = container.clientHeight;
+
+            array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${(value / maxValue) * (containerHeight - 20)}px`;
+
+                // Apply all highlighting types
+                if (highlights.compared && highlights.compared.includes(index)) {
+                    bar.classList.add('compared');
+                }
+                if (highlights.swapped && highlights.swapped.includes(index)) {
+                    bar.classList.add('swapped');
+                }
+                if (highlights.sorted && highlights.sorted.includes(index)) {
+                    bar.classList.add('sorted');
+                }
+                if (highlights.pivot === index) {
+                    bar.classList.add('pivot');
+                }
+                if (highlights.min_index === index) {
+                    bar.classList.add('min_index');
+                }
+                if (highlights.current === index) {
+                    bar.classList.add('current');
+                }
+                if (highlights.key === index) {
+                    bar.classList.add('key');
+                }
+                if (highlights.shifting === index) {
+                    bar.classList.add('shifting');
+                }
+
+                container.appendChild(bar);
+            });
+
+            // Update description
+            if (highlights.description) {
+                document.getElementById('algorithmDescription').textContent = highlights.description;
+            }
+        }
+
+        function renderStep(step) {
+            renderArray(step.array, step);
+        }
+
+        function updateInfo() {
+            document.getElementById('stepCount').textContent = currentStep;
+            document.getElementById('totalSteps').textContent = steps.length;
+            document.getElementById('executionTime').textContent = executionTime.toFixed(2) + 's';
+        }
+    </script>
+</body>
+
+</html>
